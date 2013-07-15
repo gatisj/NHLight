@@ -1,0 +1,8 @@
+#9はkeywords-token(強い強調)
+9=
+
+#10はkeyword-token
+10=this|super|instanceof|native|volatile|transient|true|false|void|null|new|package|import|public|private|protected|extends|implements|try|catch|throws|throw|synchronized|static|final|abstract|finally
+
+#11はkeywordw-token(弱い強調)
+11=

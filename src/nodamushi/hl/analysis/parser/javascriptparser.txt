@@ -1,0 +1,1 @@
+10=true|false|null|undefined|instanceof|new|prototype|this|in|with|document|try|catch|finally

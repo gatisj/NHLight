@@ -1,0 +1,229 @@
+// <ol><li>を利用してソースコードを書き出したときに
+// 使うCSSを生成するSCSSファイルです。
+//
+// 文字コードはUTF-8
+//
+// コンパイル方法
+//  scss -E utf-8 code2html_typeOL.scss code2html_typeOL.css
+//   ファイルの変更を監視したい場合は
+//  scss -E utf-8 --watch code2html_typeOL.scss:code2html_typeOL.css
+//
+// @nodamushiのsassのバージョンは3.2.5
+
+//基本フォントサイズ(noneだと設定しません)
+$default-font-size:none;
+//行番号の幅 3emだと大体3桁の数字まで表記できます(font設定による)
+$linenumber-width:3.2em;
+//行番号とソースコードのセパレータの幅
+$separator-width:3px;
+//<code>のボーダーの幅
+$code-border-size:2px;
+
+
+
+//<code>のボーダー色
+$code-border-color:#cc8528;
+//行番号の背景色
+$linenumber-background-color:#fdf8ed;
+//行番号の色
+$linenumber-color:#24396a;
+//行番号のfont-weight
+$linenumber-fontweight:normal;
+//行番号とソースコードのセパレータの色
+$separator-color:gray;
+//ソースコードの基本背景色(基本的には見えない)
+$codebackground-color:white;
+//奇数行の背景色
+$oddline-background-color:white;
+//偶数行の背景色
+$evenline-background-color:aliceblue;
+//基本となる文字の色
+$default-fontcolor:black;
+
+code.codetohtml{
+
+    //一般的なトークン
+    .plain-token{
+	color:$default-fontcolor;
+    }
+
+    //ブロックを構成する{}を表すトークン
+    //lispなど言語によっては()も対象
+    .block-token{
+	color:black;
+    }
+
+    //関数呼び出しや数式中の()を表すトークン
+    .parenthesis-token{
+	color:black;
+    }
+
+    //文字列を表すトークン
+    .string-token{
+	color:#e23e0e;
+    }
+
+    //コメントを表すトークン
+    .comment-token{
+	color:#3aa232;
+    }
+    
+    //if,forなど処理の流れを変えるトークン
+    .branch-token{
+	color:#ec6c6c;	
+    }
+
+    //define,function,class,varなど、何かを定義するトークン
+    .define-token{
+	color:#ec6c6c;
+    }
+
+    //int doubleなど型を表すトークン
+    .type-token{
+	color:red;
+    }
+
+    //一般的にはreturn
+    .return-token{
+	color:red;
+	font-weight:bold;
+    }
+
+    //強い強調をするトークン
+    //一応用意してある
+    .strong-keyword-token{
+	color:#ec6c6c;
+	font-weight:bold;
+    }
+
+    //中ぐらいの強調をするトークン
+    //基本的にはnodamushiが作ったParserは
+    //キーワードは全部これ
+    .keyword-token{
+	color:#ec6c6c;
+	font-weight:bold;
+    }
+
+    //弱い強調をするトークン
+    //一応用意してある
+    .weak-keyword-token{
+    }
+
+    //数値を表すトークン
+    .number-token{
+
+    }
+    //+-*/などの演算子
+    .operator-token{
+	
+    }
+
+    //文末記号「;」など
+    .eos-token{
+
+    }
+
+    //object.clone()などの「.」やCの->などアクセスを表すトークン
+    .access-token{
+    }
+
+    //javascriptやperlなどの正規表現構文を表すトークン
+    .regexp-token{
+	color:#3aa232;
+    }
+    
+    //javadocを表すトークン
+    .javadoc-token{
+	color:#6680cc;
+    }
+
+    //javaでは'a'とすると、char型を表す。この手の表現を表すトークン
+    .char-token{
+	color:#e23e0e;
+    }
+    //注釈　javaでは@Overrideなど
+    .annotation-token{
+	color:gray;
+    }
+    //HTMLなどの地の文
+    .text-token{
+	
+    }
+    //HTMLでは<!DOCTYPE>とか
+    .declaration-token{
+	color:gray;
+    }
+
+    //タグの開始文字と終了文字　HTMLでは<>（</ ,/>も）
+    .tag-token{
+	color:blue;
+    }
+
+    //タグ名
+    .tagname-token{
+	color:blue;
+    }
+    //属性名
+    .attribute-token{
+	color:purple;
+    }
+    
+    
+
+
+
+
+
+
+
+    
+    @if $default-font-size != none{
+	font-size:$default-font-size;
+    }
+
+    display:block;
+    border:solid $code-border-size $code-border-color;
+    background-color:$linenumber-background-color;
+    padding:0;
+    font-weight:normal;
+    font-variant:normal;
+
+    word-wrap:break-word;
+    
+    pre{
+	margin:0;
+	padding:0;
+    }
+    
+    ol{
+	background-color:$separator-color;
+	margin:0 0 0 $linenumber-width;
+	padding:0 0 0 $separator-width;
+	list-style-type:decimal;
+	color: $linenumber-color;
+	@if $linenumber-fontweight!=normal{
+	    font-weight: $linenumber-fontweight;
+	}
+    }
+
+    li{
+	padding:0 0.5em 0 2em;
+	text-indent:-1em;
+	line-height:1.3em;
+	background-color:$codebackground-color;
+	white-space:normal;
+    }
+
+    .evenline{
+	background-color:$evenline-background-color;
+    }
+
+    .oddline{
+	background-color:$oddline-background-color;
+    }
+    
+    span.codecontainer{
+	font-weight:normal;
+	color:$default-fontcolor;
+    }
+}
