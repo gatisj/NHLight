@@ -106,7 +106,8 @@ public class Token implements Cloneable{
      */
     public boolean add(Token t){
         if(t.source.equals(source)
-                &&t.yline == yline && t.xchar == xchar+length){
+//                &&t.yline == yline 
+                && t.xchar == xchar+length){
             length += t.length;
             return true;
         }else return false;

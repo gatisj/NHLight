@@ -4,9 +4,9 @@
 // 文字コードはUTF-8
 //
 // コンパイル方法
-//  scss -E utf-8 code2html_typeOL.scss code2html_typeOL.css
+//  scss -E utf-8 nhlight_typeol.scss nhlight_typeol.css
 //   ファイルの変更を監視したい場合は
-//  scss -E utf-8 --watch code2html_typeOL.scss:code2html_typeOL.css
+//  scss -E utf-8 --watch nhlight_typeol.scss:nhlight_typeol.css
 //
 // @nodamushiのsassのバージョンは3.2.5
 
@@ -25,7 +25,7 @@ $code-border-size:2px;
 $code-border-color:#cc8528;
 //行番号の背景色
 $linenumber-background-color:#fdf8ed;
-//行番号の色
+//行番号の色a
 $linenumber-color:#24396a;
 //行番号のfont-weight
 $linenumber-fontweight:normal;
@@ -40,7 +40,7 @@ $evenline-background-color:aliceblue;
 //基本となる文字の色
 $default-fontcolor:black;
 
-code.codetohtml{
+code.nhlight{
 
     //一般的なトークン
     .plain-token{
@@ -208,6 +208,7 @@ code.codetohtml{
 
     li{
 	padding:0 0.5em 0 2em;
+	margin:0;
 	text-indent:-1em;
 	line-height:1.3em;
 	background-color:$codebackground-color;
@@ -222,7 +223,7 @@ code.codetohtml{
 	background-color:$oddline-background-color;
     }
     
-    span.codecontainer{
+    span.linecontainer{
 	font-weight:normal;
 	color:$default-fontcolor;
     }

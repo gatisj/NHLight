@@ -1,4 +1,0 @@
-text,txt:{parser}.TextParser
-java:{parser}.JavaParser
-javascript,js:{parser}.JavaScriptParser
-html:{parser}.HTMLParser

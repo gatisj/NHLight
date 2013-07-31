@@ -1,0 +1,41 @@
+<?comment
+
+Template　Type OL
+
+このテンプレートは
+
+<code class="nhlight"><pre>
+<ol>
+  <li>ソースコード</li>………
+</ol>
+</pre></code>
+
+という形で整形した結果を出力します。（※改行等は含みません）
+Mozillaのサイトにあったソースコード表示部分のHTMLをかなり昔に参考にしたんだったと思います。参考にしたページがわからない～
+
+author：nodamushi
+
+?><?script
+var clname = "nhlight";
+if(containerclassname){
+ clname+=" "+containerclassname;
+}
+tag("code",clname,containerid);
+tag("pre");
+write("<ol start=")(startnumber)(">");
+?><?foreachline
+var cl;
+if(classname!=""){
+  cl = classname;
+}else{
+  cl = linenumber%2==0?evenlinename:oddlinename;
+}
+if(subclassname!=""){
+  cl+=" "+subclassname;
+}
+tag("li",cl,null);
+tag("span","linecontainer",null);
+write(tokens);
+endtag("span");
+endtag("li");
+?></ol></pre></code>

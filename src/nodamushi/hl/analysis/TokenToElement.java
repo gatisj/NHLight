@@ -2,43 +2,43 @@ package nodamushi.hl.analysis;
 
 import java.util.*;
 
-import nodamushi.hl.*;
+import nodamushi.hl.Element;
+import nodamushi.hl.EscapeMap;
+import nodamushi.hl.Node;
+import nodamushi.hl.Pair;
 
 
-
-public class TokenToHTML {
+//Elementに変換する
+class TokenToElement {
 
 	private List<Line> lines;
-	private List<Event> events;
+	private List<Flag> flags;
 	private int tabSize;
-	private int startNumber=1;
 	private boolean tabLengthFixed = false;
 	private Map<Integer, String> classNameMap; 
-	private boolean escapeSpace=true;
-	private String codeClassName = "codetohtml";
-	private String oddLineClassName="oddline";
-	private String evenLineClassName="evenline";
 	
 	
-	private String SPACE="&nbsp;";
-	private String QUOTE="&quot;";
-	private String LT="&lt;";
-	private String GT="&gt;";
-	private String AMP="&amp;";
+	private final String SPACE,DQUOTE,LT, GT,AMP;
 	
 	
 
-	public TokenToHTML(Collection<Line> lines,int tabSize,boolean tabLengthFixed,int startNumber
-			,Collection<Event> events,String userClassNameDefine) {
+	public TokenToElement(Collection<Line> lines,int tabSize,boolean tabLengthFixed
+			,Collection<Flag> flags,String userClassNameDefine,EscapeMap escape) {
 		this.lines = new ArrayList<>(Objects.requireNonNull(lines));
 		if(tabSize<1)tabSize=1;
 		this.tabSize = tabSize;
 		this.tabLengthFixed = tabLengthFixed;
-		this.startNumber = startNumber;
-		this.events  = new ArrayList<>(events);
+		this.flags  = new ArrayList<>(flags);
 		this.classNameMap=new HashMap<Integer, String>();
 		setTokenClassNames(TokenTypePreDefine.DEFAULT_TOKEN_MAP);
 		setTokenClassNames(userClassNameDefine);
+		
+		if(escape==null)escape = new EscapeMap();
+		SPACE = escape.space();
+		DQUOTE=escape.doublequote();
+		LT=escape.lessthan();
+		GT=escape.greaterthan();
+		AMP=escape.and();
 	}
 
 
@@ -81,12 +81,11 @@ public class TokenToHTML {
 	name_span = "name-span",
 	document_fragment="document-fragment",
 	SPAN="span",
-	OL="ol",
-	LI="li",
+	LINE="line",
 	SUB_CLASS="sub-class";
 	
-	private Event nextevent;
-	private int nextEventPosition,tokenx,linex;
+	private Flag nextflag;
+	private int nextFlagPosition,tokenx,linex;
 	private int eindex = 0;
 	private List<Element> lis;
 	private Element li,currentTokenAppendNode;
@@ -96,9 +95,9 @@ public class TokenToHTML {
 	private Token currentToken;
 	
 	private void clear(){
-		nextevent =null;
+		nextflag =null;
 		li=currentTokenAppendNode= null;
-		nextEventPosition=-1;
+		nextFlagPosition=-1;
 		tokenx=-1;
 		eindex=0;
 		lis=null;
@@ -110,71 +109,73 @@ public class TokenToHTML {
 
 
 
-	private void nextEvent(){
-		nextevent = getNextEvent();
-		nextEventPosition=getNextEventPosition();
+	private void nextFlag(){
+		nextflag = getNextFlag();
+		nextFlagPosition=getNextFlagPosition();
 	}
 
-	private Event getNextEvent(){
-		if(events.size()>eindex)return events.get(eindex++);
+	private Flag getNextFlag(){
+		if(flags.size()>eindex)return flags.get(eindex++);
 		return null;
 	}
-	private int getNextEventPosition(){
-		return nextevent==null?-1:nextevent.position;
+	private int getNextFlagPosition(){
+		return nextflag==null?-1:nextflag.position;
 	}
 
+	
+//	/**
+//	 * 行番号を表すのに&lt;ol>と&lt;li>を使った表現に変換します
+//	 * @return
+//	 */
+//	public Element convertTypeOl(){
+//	   List<Element> lis = _convertToNode();
+//	   int i=startNumber;
+//	   if(i!=1){
+//	       ol.setAttribute("start", Integer.toString(i));
+//	   }
+//	   for(Element li:lis){
+//	       Element e = new Element("li");
+//	       String clname = li.getAttribute("class");
+//	       if(clname.isEmpty()){
+//	           clname = (i&1) == 1? oddLineClassName:evenLineClassName;
+//	       }
+//	       String subclass = li.getAttribute(SUB_CLASS);
+//	       if(!subclass.isEmpty()){
+//	           clname+=" "+subclass;
+//	       }
+//	       e.setClassName(clname);
+//	       li.removeAttribute(SUB_CLASS);
+//	       e.appendChild(li);
+//	       li.setNodeName("span");
+//	       li.setClassName("codecontainer");
+//	       ol.appendChild(e);
+//	       i++;
+//	   }
+//	   
+//	   Element pre = new Element("pre"),code=new Element("code");
+//	   code.setClassName(codeClassName);
+//	   pre.appendChild(ol);
+//	   code.appendChild(pre);
+//	   
+//	   return code;
+//	}
+	
+	
 	
 	/**
-	 * 行番号を表すのに&lt;ol>と&lt;li>を使った表現に変換します
+	 * Elementの中間表現に変換
 	 * @return
 	 */
-	public Element convertTypeOl(){
-	   List<Element> lis = _convertToNode();
-	   Element ol = new Element(OL);
-	   int i=startNumber;
-	   if(i!=1){
-	       ol.setAttribute("start", Integer.toString(i));
-	   }
-	   for(Element li:lis){
-	       Element e = new Element("li");
-	       String clname = li.getAttribute("class");
-	       if(clname.isEmpty()){
-	           clname = (i&1) == 1? oddLineClassName:evenLineClassName;
-	       }
-	       String subclass = li.getAttribute(SUB_CLASS);
-	       if(!subclass.isEmpty()){
-	           clname+=" "+subclass;
-	       }
-	       e.setClassName(clname);
-	       li.removeAttribute(SUB_CLASS);
-	       e.appendChild(li);
-	       li.setNodeName("span");
-	       li.setClassName("codecontainer");
-	       ol.appendChild(e);
-	       i++;
-	   }
-	   
-	   Element pre = new Element("pre"),code=new Element("code");
-	   code.setClassName(codeClassName);
-	   pre.appendChild(ol);
-	   code.appendChild(pre);
-	   
-	   return code;
-	}
-	
-	
-	
-	//中間表現に変更
-	private List<Element> _convertToNode(){
-		nextEvent();
+	public List<Element> convertToNode(){
+		nextFlag();
 
-		lis = new ArrayList<>();//<li>のリスト。
-		li =null;//現在編集中の<li>
+		lis = new ArrayList<>();//<line>のリスト。
+		li =null;//現在編集中の<line>
 		parent=null;
 
 		for(Line l:lines){
 			linex=0;
-			li = new Element(LI);
+			li = new Element(LINE);
 			lis.add(li);
 			parent = li;
 			for(Token t:l.getTokens()){
@@ -190,7 +191,7 @@ public class TokenToHTML {
 					currentTokenAppendNode=elem;
 				}
 
-				checkEvent(start, endx);
+				checkFlag(start, endx);
 
 
 				String v = currentToken.getString();
@@ -247,7 +248,7 @@ public class TokenToHTML {
 	private void convertTagName(List<Node> nodes){
 	    for(Node n:nodes){
 	        switch(n.getNodeName()){
-	            case name_span:
+	            case name_span://オブジェクト使い回してるんだからif(name_span==にした方が処理が早いか？
 	            case block_span:
 	                n.setNodeName("span");
 	                break;
@@ -265,85 +266,109 @@ public class TokenToHTML {
 				( c>='\uff61' && c<='\uff9f' ) // 半角カナ
 				)
 			return 1;
+		else if(!Character.isDefined(c))//TODO 文字でないものは?として扱いたいんだけど、isDefinedじゃ全然判別できてない？
+		    return 1;
 		else
 			return 2;
 	}
 	
-	private int stringLength(String str){
-		int x = 0;
-		for(int i=0,e=str.length();i<e;i++){
-			x+=charLength(str.charAt(i));
-		}
-		return x;
-	}
+//	private int stringLength(String str){
+//		int x = 0;
+//		for(int i=0,e=str.length();i<e;i++){
+//		    char c = str.charAt(i);
+//		    if(Character.isHighSurrogate(c)){//サロゲートペア
+//		        if(i+1<e){
+//		            char cc = str.charAt(i+1);
+//		            if(!Character.isLowSurrogate(cc)){
+//		                x+=1;//'?'扱い
+//		            }else{
+////		                int p = Character.toCodePoint(c, cc);
+////		                if(Character.isDefine(p)){
+//		                i++;
+//		                x+=2;
+//		                    
+////		                }
+//	                }
+//		        }else x+=1;//'?'扱い
+//		    }else
+//		        x+=charLength(c);
+//		}
+//		return x;
+//	}
 	
-	private String escape(char c){
+	//文字をエスケープして書き出し
+	private void print(char c,StringBuilder sb){
 		switch(c){
 		case '&':
-			return AMP;
+			sb.append(AMP);
+			break;
 		case '<':
-			return LT;
+			sb.append(LT);
+			break;
 		case '>':
-			return GT;
+			sb.append(GT);
+			break;
 		case '"':
-			return QUOTE;
+			sb.append(DQUOTE);
+			break;
 		case ' ':
-			return SPACE;
+			sb.append(SPACE);
+			break;
 		default:
-			return Character.toString(c);
+		    if(Character.isDefined(c)){//TODO 文字でないものは?として扱いたいんだけど、isDefinedじゃ全然判別できてない？
+		        sb.append(c);
+		    }else{
+		        sb.append("?");
+		    }
+			break;
 		}
 	}
 	
-	private String escape(String str){
-		StringBuilder sb = new StringBuilder();
-		for(int i=0,e=str.length();i<e;i++){
-			char c = str.charAt(i);
-			sb.append(escape(c));
-		}
-		return sb.toString();
-	}
+	
 	
 	private Node toText(String str){
-		if(str.contains("\t")){
-			int lx = linex;
-			if(!tabLengthFixed){
-				StringBuilder sb = new StringBuilder();
-				for(int i=0,e=str.length();i<e;i++){
-					char c = str.charAt(i);
-					if(c=='\t'){
-						int pos = (lx/tabSize + 1)*tabSize;
-						int length = pos-lx;
-						for(int k=0;k<length;k++)sb.append(SPACE);//可変長
-						lx = pos;
-					}else{
-						sb.append(escape(c));
-						lx+=charLength(c);
-					}
-				}
-				Node n = Node.createTextNode(sb.toString());
-				linex = lx;
-				return n;
-			}else{
-				StringBuilder sb = new StringBuilder();
-				for(int i=0,e=str.length();i<e;i++){
-					char c = str.charAt(i);
-					if(c=='\t'){
-						for(int k=0;k<tabSize;k++)sb.append(SPACE);//tabの長さはtabSizeで固定
-						lx +=tabSize;
-					}else{
-						sb.append(escape(c));
-						lx+=charLength(c);
-					}
-				}
-				Node n = Node.createTextNode(sb.toString());
-				linex = lx;
-				return n;
-			}
-		}else{
-			Node n = Node.createTextNode(escape(str));
-			linex +=stringLength(str);
-			return n;
-		}
+	    int lx = linex;
+	    
+	    StringBuilder sb = new StringBuilder();
+	    for(int i=0,e=str.length();i<e;i++){
+	        char c = str.charAt(i);
+	        if(c=='\t'){
+	            int loop=tabLengthFixed?
+	                    tabSize  : (lx/tabSize + 1)*tabSize-lx;
+	            for(int k=0;k<loop;k++)sb.append(SPACE);
+	            lx +=loop;
+	        }else{
+	            if(Character.isHighSurrogate(c)){//サロゲートペア
+	                if(i+1<e){
+	                    char cc = str.charAt(i+1);
+	                    if(Character.isLowSurrogate(cc)){
+	                        i++;//次をスキップ
+	                        lx+=2;//サロゲートペアは二文字幅と扱う。
+	                        int p = Character.toCodePoint(c, cc);
+	                        if(Character.isDefined(p)){//TODO 文字でないものは?として扱いたいんだけど、isDefinedじゃ全然判別できてない？
+	                            sb.append(c).append(cc);
+	                        }else{
+	                            //文字として登録されていない場合。
+	                            //ここは?を1文字にすべきか2文字にすべきか
+	                            sb.append("??");
+	                        }
+	                        continue;
+	                    }
+	                }
+	                //i+1==eか、下位がサロゲートペアじゃない場合
+	                lx+=1;
+	                sb.append('?');
+	                
+	            }else{//char１つで1文字
+	                print(c,sb);
+	                lx+=charLength(c);
+	            }//end if surrogate
+	        }//end if c=='\t'
+	    }//end for
+	    Node n = Node.createTextNode(sb.toString());
+	    linex = lx;
+	    return n;
+			
 	}
 	
 	
@@ -377,58 +402,61 @@ public class TokenToHTML {
 	}
 
 
-	private void checkEvent(int from,int end){
-		while(nextevent!=null){
+	private void checkFlag(int from,int end){
+		while(nextflag!=null){
 
-			if(nextEventPosition <from){
-				nextEvent();
+			if(nextFlagPosition <from){
+				nextFlag();
 				continue;
 			}
 
-			if(nextEventPosition >end)break;
+			if(nextFlagPosition >end)break;
 
-			int type = nextevent.type;
-			if(nextEventPosition==end){//close系だけ処理
+			int type = nextflag.type;
+			if(nextFlagPosition==end){//close系だけ処理
 				switch(type){
-				case Event.CLOSE_NAME_SPAN:
+				case Flag.CLOSE_NAME_SPAN:
 					closeNameSpan(from);
-					nextEvent();
+					nextFlag();
 					break;
-//				case Event.CLOSE_BLOCK_SPAN:
+//				case Flag.CLOSE_BLOCK_SPAN:
 //					closeBlockSpan();
-//					nextEvent();
+//					nextFlag();
 //					break;
 				default:
 				    return;
 				}
 			}else{
 				switch(type){
-				case Event.LINENAME:
-					linenameEvent();
+				case Flag.LINENAME:
+					linenameFlag();
 					break;
-				case Event.ADDLINENAME:
-					addLineNameEvent();
+				case Flag.ADDLINENAME:
+					addLineNameFlag();
 					break;
-				case Event.NAME_SPAN:
+				case Flag.NAME_SPAN:
 					createNameSpan(from);
 					break;
-				case Event.BLOCK_SPAN:
+				case Flag.BLOCK_SPAN:
 					createBlockSpan();
 					break;
-				case Event.CLOSE_NAME_SPAN:
+				case Flag.CLOSE_NAME_SPAN:
 					closeNameSpan(from);
 					break;
-				case Event.CLOSE_BLOCK_SPAN:
+				case Flag.CLOSE_BLOCK_SPAN:
 					closeBlockSpan();
 					break;
+				case Flag.LINE_NUMBER_FLAG:
+				    lineNubmerFlag();
+				    break;
 				}
-				nextEvent();
+				nextFlag();
 			}
 		}
 	}
 
 	private void createBlockSpan(){
-		String name = nextevent.name;
+		String name = nextflag.name;
 		Element e = new Element(block_span);
 		e.setClassName(name);
 		parent.appendChild(e);
@@ -437,18 +465,18 @@ public class TokenToHTML {
 
 	private String getCurrentTokenString(int from){
 		String str = currentToken.getString();
-		String value = str.substring(tokenx, nextEventPosition-from);
-		tokenx = nextEventPosition-from;
+		String value = str.substring(tokenx, nextFlagPosition-from);
+		tokenx = nextFlagPosition-from;
 		return value;
 	}
 
 	private void createNameSpan(int from){
-		spanstack.add(new Pair<String, String>(name_span, nextevent.name));
+		spanstack.add(new Pair<String, String>(name_span, nextflag.name));
 		String value = getCurrentTokenString(from);
 		Node text = toText(value);
 		currentTokenAppendNode.appendChild(text);
 		Element elem = new Element(name_span);
-		elem.setClassName(nextevent.name);
+		elem.setClassName(nextflag.name);
 		currentTokenAppendNode.appendChild(elem);
 		currentTokenAppendNode = elem;
 	}
@@ -476,13 +504,19 @@ public class TokenToHTML {
 		}
 	}
 
-	private void linenameEvent(){
-		String name = nextevent.name;
+	private void linenameFlag(){
+		String name = nextflag.name;
 		li.setClassName(name);
 	}
+	
+	
+	private void lineNubmerFlag(){
+	    String name = nextflag.name;
+	    li.setAttribute("linenumberflag", name);
+	}
 
-	private void addLineNameEvent(){
-		String name = nextevent.name;
+	private void addLineNameFlag(){
+		String name = nextflag.name;
 		String old = li.getAttribute(SUB_CLASS);
 		String n;
 		if(old.isEmpty())n = name;
@@ -494,12 +528,6 @@ public class TokenToHTML {
 	private boolean _isMakeSpan(String className){
 		return !(className.isEmpty() || "*".equals(className) );
 	}
-
-
-
-
-
-
 
 
 

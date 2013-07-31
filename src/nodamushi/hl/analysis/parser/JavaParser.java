@@ -5,15 +5,14 @@ import nodamushi.hl.analysis.parser.flex.JavaFlexParser;
 
 public class JavaParser extends FlexParser{
 
-    private final static String KeywordDefine;
-    static{
-        KeywordDefine = FlexParser.readPackageTextFile("javaparser.txt");
+    @Override
+    public String language(){
+        return "java";
     }
-    
     
     @Override
     protected String defaultKeywordDefine(){
-        return KeywordDefine;
+        return T.KeywordDefine;
     }
     
     @Override
@@ -40,5 +39,13 @@ public class JavaParser extends FlexParser{
         }
         addToken(t);
     }
-
+    
+    //ダブルチェックロッキングパターンの代わり
+    private static class T{
+        final static String KeywordDefine;
+        static{
+            KeywordDefine = FlexParser.readPackageTextFile("javaparser.txt");
+        }
+    }
+    
 }

@@ -1,4 +1,4 @@
-code.codetohtml {
+code.nhlight {
   display: block;
   border: solid 2px #cc8528;
   background-color: #fdf8ed;
@@ -6,66 +6,67 @@ code.codetohtml {
   font-weight: normal;
   font-variant: normal;
   word-wrap: break-word; }
-  code.codetohtml .plain-token {
+  code.nhlight .plain-token {
     color: black; }
-  code.codetohtml .block-token {
+  code.nhlight .block-token {
     color: black; }
-  code.codetohtml .parenthesis-token {
+  code.nhlight .parenthesis-token {
     color: black; }
-  code.codetohtml .string-token {
+  code.nhlight .string-token {
     color: #e23e0e; }
-  code.codetohtml .comment-token {
+  code.nhlight .comment-token {
     color: #3aa232; }
-  code.codetohtml .branch-token {
+  code.nhlight .branch-token {
     color: #ec6c6c; }
-  code.codetohtml .define-token {
+  code.nhlight .define-token {
     color: #ec6c6c; }
-  code.codetohtml .type-token {
+  code.nhlight .type-token {
     color: red; }
-  code.codetohtml .return-token {
+  code.nhlight .return-token {
     color: red;
     font-weight: bold; }
-  code.codetohtml .strong-keyword-token {
+  code.nhlight .strong-keyword-token {
     color: #ec6c6c;
     font-weight: bold; }
-  code.codetohtml .keyword-token {
+  code.nhlight .keyword-token {
     color: #ec6c6c;
     font-weight: bold; }
-  code.codetohtml .regexp-token {
+  code.nhlight .regexp-token {
     color: #3aa232; }
-  code.codetohtml .javadoc-token {
+  code.nhlight .javadoc-token {
     color: #6680cc; }
-  code.codetohtml .char-token {
+  code.nhlight .char-token {
     color: #e23e0e; }
-  code.codetohtml .annotation-token {
+  code.nhlight .annotation-token {
     color: gray; }
-  code.codetohtml .declaration-token {
+  code.nhlight .declaration-token {
     color: gray; }
-  code.codetohtml .tag-token {
+  code.nhlight .tag-token {
     color: blue; }
-  code.codetohtml .tagname-token {
+  code.nhlight .tagname-token {
     color: blue; }
-  code.codetohtml .attribute-token {
+  code.nhlight .attribute-token {
     color: purple; }
-  code.codetohtml pre {
+  code.nhlight pre {
     margin: 0;
     padding: 0; }
-  code.codetohtml ol {
+  code.nhlight ol {
     background-color: gray;
     margin: 0 0 0 3.2em;
     padding: 0 0 0 3px;
     list-style-type: decimal;
     color: #24396a; }
-  code.codetohtml li {
+  code.nhlight li {
     padding: 0 0.5em 0 2em;
+    margin: 0;
     text-indent: -1em;
     line-height: 1.3em;
     background-color: white;
     white-space: normal; }
-  code.codetohtml .evenline {
+  code.nhlight .evenline {
     background-color: aliceblue; }
-  code.codetohtml .oddline {
+  code.nhlight .oddline {
     background-color: white; }
-  code.codetohtml span.codecontainer {
+  code.nhlight span.linecontainer {
     font-weight: normal;
     color: black; }

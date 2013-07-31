@@ -2,8 +2,8 @@ package nodamushi.hl.analysis;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
-public class Line{
+//各行を表す
+class Line{
 
     private Collection<Token> tokens;
     private Collection<String> classNames;

@@ -23,4 +23,4 @@ Test.prototype={
 
 var test = new Test(1,2,3);
 var reg = /aiu\/eo/g;
-
+$(document).ready(function(){});

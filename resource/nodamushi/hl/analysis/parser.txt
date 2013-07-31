@@ -1,0 +1,11 @@
+#
+#言語名とパーサーの設定ファイル
+#
+#言語名:FQCN と書くことで、AnalyzerにFQCNのクラスが登録されます
+#言語名は,区切りで並べることも出来ます。（テキストはtextとtxtなどの様に）
+#{parser}はnodamushi.hl.analysis.parserに置換されます。
+#
+text,txt:{parser}.TextParser
+java:{parser}.JavaParser
+javascript,js:{parser}.JavaScriptParser
+html:{parser}.HTMLParser

@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 import static nodamushi.hl.analysis.NHLightFlexParser.*;
 
+//<<[]>>の読み取り
 class NHLightParser{
     private static final String SPLIT_SYMBOL="=";//=以外にしたいときはここを書き換え。
     private static final String END_TAG_STRING ="]>>";//タグの終端文字を変更したい場合はここを書き換え
@@ -22,12 +23,13 @@ class NHLightParser{
     private Token before = new Token(-100, 0, 0, 0, "");//ダミー
     
     int tabsize;
-    boolean tabfix = false;
+    boolean tabfix;
     String source ="";
-    List<Event> events;
+    List<Flag> flags;
     
-    public NHLightParser(int defaultTabSize,String str){
+    public NHLightParser(int defaultTabSize,boolean tabfixed,String str){
         tabsize = defaultTabSize;
+        tabfix=tabfixed;
         NHLightFlexParser p = new NHLightFlexParser(str);
         try {
             Token t;
@@ -51,9 +53,9 @@ class NHLightParser{
         } catch (IOException e) {
             e.printStackTrace();
         }
-        ArrayList<Event> alle = new ArrayList<>();
-        events=alle;
-        ArrayDeque<Event> evs = new ArrayDeque<>();
+        ArrayList<Flag> alle = new ArrayList<>();
+        flags=alle;
+        ArrayDeque<Flag> evs = new ArrayDeque<>();
         StringBuilder sb = new StringBuilder();
         
         for(Token t:tokens){
@@ -81,14 +83,14 @@ class NHLightParser{
                     
                 case CLOSE:{
                     if(evs.isEmpty())break;
-                    Event e = evs.pop();
-                    int tt=e.type==Event.NAME_SPAN?Event.CLOSE_NAME_SPAN:Event.CLOSE_BLOCK_SPAN;
-                    Event ee = new Event(sb.length(), tt, null);
+                    Flag e = evs.pop();
+                    int tt=e.type==Flag.NAME_SPAN?Flag.CLOSE_NAME_SPAN:Flag.CLOSE_BLOCK_SPAN;
+                    Flag ee = new Flag(sb.length(), tt, null);
                     alle.add(ee);
                 }break;
                 
                 default:{
-                    Event e,target = null;
+                    Flag e,target = null;
                     int pos = sb.length();
                     Matcher m=CLASSNAME_PATTERN.matcher(value);
                     String name=null;
@@ -96,7 +98,7 @@ class NHLightParser{
                         name = m.group(1);
                     }
                     
-                    e = new Event(pos, type, name,target);
+                    e = new Flag(pos, type, name,target);
                     alle.add(e);
                     
                     switch(type){//if type>=NAMEでいいんだけど、拡張したときの為

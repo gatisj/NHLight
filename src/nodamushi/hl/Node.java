@@ -1,7 +1,5 @@
 package nodamushi.hl;
 
-import static java.lang.String.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -188,12 +186,22 @@ public class Node{
     	}
     	sb.append(">");
     	
-    	for(Node n:children){
-    		n.toHTML(sb);
-    	}
+    	innerHTML(sb);
     	
     	sb.append("</").append(name).append(">");
     	return sb;
+    }
+    
+    
+    public StringBuilder innerHTML(StringBuilder sb){
+        for(Node n:children){
+            n.toHTML(sb);
+        }
+        return sb;
+    }
+    
+    public String innerHTML(){
+        return innerHTML(new StringBuilder()).toString();
     }
     
     public String toHTML(){
