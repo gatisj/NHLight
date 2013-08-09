@@ -66,6 +66,11 @@ public class Element extends Node{
         setAttribute("class", name);
     }
     
+    public void setID(String id){
+        if(id==null)return;
+        setAttribute("id", id);
+    }
+    
     public void addClassName(String name){
         if(name==null||name.isEmpty())return;
         Attr a = getAttributeNode("class");
@@ -77,6 +82,12 @@ public class Element extends Node{
             else value +=","+name;
             a.setValue(value);
         }
+    }
+    
+    public void appendText(String str){
+        if(str==null)return;
+        Node text = Node.createTextNode(str);
+        appendChild(text);
     }
     
     

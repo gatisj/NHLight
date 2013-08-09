@@ -1,4 +1,4 @@
-NHLight ver0.1
+NHLight ver0.2
 
 プログラムコードをHTML上でシンタックスハイライトする為に作ったプログラムです。
 名前はNodamushi Highlightの略です。Syntaxは消えました。相変わらず名前を付けるのが適当なのは仕様です。
@@ -146,99 +146,61 @@ public Test<<[name=a]>>Object method(in<<[/]>>t x,int y){
 
 出力結果のHTMLを整形するテンプレートについて
 
-出力結果のHTMLはテンプレートファイルによって整形されます。
-テンプレートはphpの様にHTMLファイルの中に制御構文を入れる事ができるファイルです。
-制御構文の中身はJavaScriptで記述します。
+　テンプレートはJavaScriptで記述します。DOMオブジェクト（の様な物）を生成し、一つのElementを返します。
+　ElementはDOMっぽいものを簡易的に扱えるように定義したnodamushi.hl.Elementであり、完全なDOMオブジェクトではないので注意してください。
+　細かいことは、nodamushi.hl.default.jsを読む方が理解早いかも。
 
 
-<?foreachline
-～JavaScript～
-?>
-これはハイライトする文字列の各行について処理を行います。スクリプトでは以下の変数が利用できます。処理は各行について独立しており、varを用いて定義した変数は各行の処理単位でしか利用できません。（※<?foreachlineはfunction(){に変換される為です）
-
-linenumber:
-　現在処理している行番号
-tokens:
-　行に所属するトークンをHTMLで表現した文字列です。（現在の所、トークンレベルで制御する機能は用意してありません。）
-classname:
-　現在の行に付加する基本クラス名です。多くの場合は空文字です。この変数はnodamushiのテンプレートの実装において、classnameが定義されている場合は偶数奇数のクラス名を付加しない、というルールのテンプレートを作った為に必要となりました。
-subclassname:
-　現在の行に付加するクラス名です。クラス名は複数定義されている場合もあり、その場合半角スペース区切りで並べられています。上記のclassnameの他にもクラス名を付加したいという事からこの変数が定義されました。
-
-classname,subclassnameはユーザー指定のクラス名があるときに設定されます。これらの利用方法はnodamushiのテンプレートにおけるルールであり、必ずしも上記の様に処理する必要はありませんが、これらユーザーが指定したクラス名を何らかの形で行に付加して下さい。（行にクラス名を付加するのではなく、<span>を多重にするなどしても良いでしょう。）
-　「JavaScriptを書く際の注意」の項目も読んでください。
+利用可能な変数：
+　startNumber:行の開始番号
+　oddLineName:奇数行のclass名
+　evenLineName:偶数行のclass名
+　lines:パース処理によって得られた各行のDOMが格納された配列
+　id:一番外側のDOMに設定するid。空文字の場合は何も付加しないこと
+　classname:一番外側のDOMに追加するclass名。空文字の場合は何も追加しないこと
+　language:言語名
 
 
-<?script
-～JavaScript～
-?>
-記述したJavaScriptを実行します。<?scriptはfunction(){に置換される為、このスクリプト内部で定義した変数は外部では利用できません。
+利用可能な関数：
+　createElement(name):
+　　名前がnameであるElementを生成します。
+
+　foreach(func):
+　　各行の処理についてfuncを呼び出します。
+
+　　funcについて。
+　　引数 (i,linenumber,innerDOM,className,subClassName,label)
+　　　i:数値。現在のループ回数 0～行数-1　
+　　　linenumber:数値。行番号
+　　　innerDOM:Element。ソースコードの現在の行をパースして生成されたDOM
+　　　className:string
+　　　　nodamushiが作ったテンプレートのルールにおいて、「このclassNameが空文字でない場合、この値をclass名に使い、そうでない場合は偶数行奇数行に対応するclass名を行のクラス名とする。」と定義してある。
+　　　subClassName:string
+　　　　nodamushiが作ったテンプレートのルールにおいて、「subClassNameが空文字でない場合、行のclass名に追加する名前」と定義してある。半角スペース区切りになっている。
+　　　label:string
+　　　　Lamuriyanとの連携用。この文字列が空文字でない場合、行に「Lamuriyan-Label」という名前の属性にlabelの値を設定する。
 
 
-<?gscript
-～JavaScript～
-?>
-記述したJavaScriptを実行します。このスクリプトはグローバル環境下で実行されます。
+　getOddOrEvenLineName(number):
+　　numberが奇数の時oddLineNameを、偶数の時evenLineNameを返す関数
 
-<?comment
-～
-?>
-<?commentから次にの?>が現れるまではコメントとして扱われます。
+　print: 標準出力に文字を出力する。
 
+Elementについて
+　ものすごく適当に作ったDOMライクな自作Javaクラスです。本物のDOMと同じようには扱えません。
+　生成：createElement関数を使う
 
-?>は行頭でなくても反応します。
-<?script等の単語の後には半角スペースもしくは改行が必須です。
+　属性の設定。element.setAttribute(name,value)を使う
 
+　属性を得る。element.getAttribute(name)を使う。返ってくる値はjava.util.Stringであり、JavaScriptのstringではないので注意。
 
-****スクリプト内部で使える関数について
-スクリプトで処理した結果を出力に反映するには、以下のwrite関数を利用します。
+　子の追加。element.appendChild(Element)を使う。
 
-write(string):
-　出力にstringを書き出します。この関数は自身を返すので、write(a)(b)(c)の様につなげて書くことが出来ます。
-
-writeln(string):
-　出力にstringを最後に改行を付けて書き出します。この関数は自身を返すのでwriteln(a)(b)(c)の様につなげて書くことが出来ます。
-
-tag(name,classname,idname):
-　<name class="classname" id="idname">を書き出す為のメソッドです。利用は必須ではありません。
-
-endtag(name):
-　</name>を書き出す為のメソッドです。
-
-
-
-print(string):
-println(string):
-　標準出力（shellやコマンドプロンプトとか）に文字列を書き出します。JavaのSystem.out.printに対応してて、書き換え不可能らしい。デバッグにどうぞ。
-
-
-****スクリプト内部で使える変数について
-startnumber:
-　行番号の開始番号
-contentid:
-　出力されるHTMLの最上位要素のidの名前。設定されていない場合は空文字になります。
-language:
-　ソースコードの種類です。text,java,javascript,htmlが渡されます。
-evenlinename:
-　奇数行目に付加するクラス名です。
-oddlinename:
-　偶数行目に付加するクラス名です。
-linecounts:
-　全部の行数（最後の行番号ではなく、何行あるか）
-
-
-****書き換えるとまずい変数や関数
-write,writeln,__foreach__,__func__[0-9]+ ,__contents,__names, __subnames,__stringbuffer
-これらの変数は書き換えないで下さい。
-
-
-****JavaScriptを書く際の注意
-　foreachlineで利用可のなtokens,classname,subclassnameはJavaScriptの文字列ではなく、”java.lang.String”になっています。よって、classnameが空文字の際でもif(classname)の様にしても、classnameは単なるオブジェクトとして判断され、trueになります。
-　これは、私がデータを配列で処理系に突っ込んでいる為、Java→JaavaScriptのオブジェクト変換が配列要素に対して適応されていないことが原因のようです。
-　しかし、if(classname!="")とすることで空文字でない場合の処理が行えます。ただし、ここで厳密比較演算子を使うと、Javaの文字列とJavaScriptの文字列の比較を行うのでfalseになってしまいます。
-　この挙動はバグだと思いますが、JavaScriptオブジェクトを作らないので余計なメモリも使わないし、このままでいっかな～と仕様にしてしまいました。
-
-
+　文字列の追加。element.appendText(string)を使う
+　
+　classの設定。element.setClass(value)　ただのsetAttributeの簡略用関数
+　idの設定。　element.setID(value)　　ただのsetAttributeの簡略洋館数
+　
 
 
 **************************************************************

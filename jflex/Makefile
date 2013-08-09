@@ -1,8 +1,8 @@
 # jflexファイルのコンパイルを行うMakefile
+
 # 環境がWindows用になってるので、パスのセパレータを変更してください。
-
-
 SEP:= $(empty)\$(empty)
+
 SPACE:= $(empty) $(empty)
 ANALYSISDIR:= .. src nodamushi hl analysis
 HTMLDIR:= .. src nodamushi hl html
@@ -12,12 +12,12 @@ FLEX := jflex
 AD:=$(subst $(SPACE),$(SEP),$(ANALYSISDIR))
 FOD:=$(subst $(SPACE),$(SEP),$(FLEXOUTDIR))
 HTML:=$(subst $(SPACE),$(SEP),$(HTMLDIR))
-IN=$(filter-out template.jflex nhlight.jflex htmltemplate.jflex,$(wildcard *.jflex))
+IN=$(filter-out template.jflex nhlight.jflex,$(wildcard *.jflex))
 
 .SUFFIXES:	.jflex .java
 .jflex.java:
 	$(FLEX) --nobak -d $(FOD)  $<
-all:flex nhlight htmltemplate
+all:flex nhlight
 
 flex:$(IN:.jflex=.java)
 
@@ -27,4 +27,4 @@ nhlight:nhlight.jflex
 htmltemplate:
 	$(FLEX) --nobak -d $(HTML) htmltemplate.jflex
 
-htmltemplate.jflex:htmltemplate
+

@@ -3,204 +3,106 @@ package nodamushi.hl.html;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.script.*;
 
+import nodamushi.hl.Element;
 import nodamushi.hl.FullReadUtils;
-import nodamushi.hl.analysis.Token;
 
-/**
- * テンプレートファイルを読み込み、入力を整形して出力するクラス。
- * @author nodamushi
- *
- */
 public class HTMLTemplateEngine{
-    
-    private static String JavaScriptCode=
-            "function write(str){__stringbuffer.print(str);return write;}"//write method
-            + "function writeln(str){__stringbuffer.println(str);return writeln;}"// writeln method
-            + "function __foreach__(func){for(var i=0;i<__contents.length;i++){func(startnumber+i,__contents[i],__names[i],__subnames[i]);}}"
-            + "function tag(name,clz,id){"
-            + "write('<')(name);"
-            + "if(clz){write(' class=\"')(clz)('\"');}"
-            + "if(id){write(' id=\"')(id)('\"');}"
-            + "write('>');}"
-            + "function endtag(name){"
-            + "write('</')(name)('>');}";
-    private static ScriptEngineManager sem = new ScriptEngineManager();
-    /**
-     * JavaScriptのwriteで利用する為のクラスです。<br> 
-     * JavaScriptEngingの為にpublicになっていますが、他クラスは利用しないで下さい。（使うメリットもないが…）
-     */
-    @Deprecated
-    static public final class PrintBuffer{
-        StringBuilder sb = new StringBuilder();
-        public void print(String str){
-            sb.append(str);
-        }
-        public void println(String str){
-            sb.append(str).append("\n");
-        }
-    }
-    
-    //ただの構造体
-    static private class A{
-        String string;
-        boolean isScript=false;
-        String code;
-    }
 
+    public static final String LabelAttrName="Lamuriyan-Label";
+    //実行時に必要な変数
+    //startNumber:行の開始番号
+    //oddLineName:偶数行のクラス名
+    //evenLineName:奇数行のクラス名
+    //lines: 各行のDocument-FragmentのDOMが格納された配列
+    //linage: lines.length
+    //containerid: 一番外側のDOMのid
+    //containerclassname: 一番外側のDOMのclass名
+    //langage:言語名
+    private static final String JavaScriptCode=
+            "importClass(Packages.nodamushi.hl.Element);"
+            + "var labelAttrName='"+LabelAttrName+"';"
+            + ""
+            + "function createElement(name){"
+            +   "name=name+'';"
+            +   "if(name){return new Element(name);}"
+            +   "else {return null;}"
+            + "}"
+            + "function getOddOrEvenLineName(number){return (number%2==1)?oddLineName:evenLineName;}"
+          //funcの引数(loop,lineNumber,lineDOM,lineClassName,lineSubClassName,lamuriyanLabel)
+          //戻り値でloopの次へのステップサイズを変更できる。
+          //ただし、0を返したら無視される。何も返さない場合は通常の1幅として扱う。
+            + "function foreach(func){"
+            +   "for(var i=0,linage=lines.length;i<linage;i++){"
+            +     "var e = lines[i];"
+            +     "var cn = e.getAttribute('class')+'';"
+            +     "var sub= e.getAttribute('sub-class')+'';"
+            +     "var label =e.getAttribute('linenumberflag')+'';"
+            +     "var skip=func(i,i+startNumber,e,cn,sub,label);"
+            +     "if(!isNaN(skip)&& skip!=0 ){i+=skip-1;}"
+            +   "}"
+            + "}"
+            
+            ;
+    private static final String RUNCODE="__$main$__();";
+    private static ScriptEngineManager sem = new ScriptEngineManager();
     
-    
-    private List<A> alist = new ArrayList<>();
     private ScriptEngine jsengine;
     private Bindings original;
-
+    private CompiledScript compiled;
     
-    /**
-     * 与えられたテンプレートの内容を元にエンジンを作成します。
-     * @param template テンプレートの内容
-     * @throws ScriptException JavaScriptのパースエラー
-     */
     public HTMLTemplateEngine(String template) throws ScriptException{
-        HTMLTemplateParser p = new HTMLTemplateParser();
-        List<Token> tokens=p.parse(template);
-//        ScriptEngineManager sem = new ScriptEngineManager();
         jsengine = sem.getEngineByName("JavaScript");
         jsengine.eval(JavaScriptCode);
-        
-        
-        int i=0;
-        for(Token t:tokens){
-            switch(t.getType()){
-                case HTMLTemplateFlexParser.FOREACHSCRIPT_TOKEN:
-                    String v = t.getString().trim();
-                    if(!v.isEmpty()){
-                        A a = new A();
-                        a.isScript=true;
-                        a.string = "__foreach__(__func__"+i+");";
-                        String code = "var __func__"+i+"=function(linenumber,tokens,classname,subclassname){"+v+"}";
-                        a.code = v;
-                        i++;
-                        try{
-                            jsengine.eval(code);
-                        }catch(ScriptException e){
-                            throw new ScriptException("error message:"+e.getMessage()+".\nエラーは <?foreachline\n"+v+"\n?>の評価で起こりました");
-                        }
-                        alist.add(a);
-                    }
-                    break;
-                case HTMLTemplateFlexParser.SINGLESCRIPT_TOKEN:
-                    v = t.getString().trim();
-                    if(!v.isEmpty()){
-                        A a = new A();
-                        a.isScript=true;
-                        a.string = "__func__"+i+"();";
-                        String code = "var __func__"+i+"=function(){"+v+"}";
-                        a.code= v;
-                        i++;
-                        try{
-                            jsengine.eval(code);
-                        }catch(ScriptException e){
-                            throw new ScriptException("error message:"+e.getMessage()+".\nエラーは <?script\n"+v+"\n?>の評価で起こりました。");
-                        }
-                        alist.add(a);
-                    }
-                    break;
-                case HTMLTemplateFlexParser.GLOBALSCRIPT_TOKEN:
-                    v = t.getString().trim();
-                    if(!v.isEmpty()){
-                        A a = new A();
-                        a.isScript=true;
-                        a.string = v+";";
-                        alist.add(a);
-                    }
-                    break;
-                case HTMLTemplateFlexParser.TEXT:
-                    A a = new A();
-                    alist.add(a);
-                    a.string = t.getString();
-                    break;
-            }
-        }
+        jsengine.eval("var __$main$__=function(){"+template+";};");
         original=jsengine.createBindings();
         original.putAll(jsengine.getBindings(ScriptContext.ENGINE_SCOPE));
         jsengine.getBindings(ScriptContext.ENGINE_SCOPE).clear();
+        if(jsengine instanceof Compilable){
+            compiled = ((Compilable)jsengine).compile(RUNCODE);
+        }
     }
-    
     private boolean isempty(String str){
         return str==null || str.trim().isEmpty();
     }
-    
-    /**
-     * 引数を元にテンプレートからHTMLを生成します。
-     * @param linecontents 各行のHTML。テンプレートではtokensになる
-     * @param linenames 各行のクラス名。テンプレートではclassnameになる
-     * @param subclassname 各行のサブクラス名。テンプレートではsubclassnameになる
-     * @param startnumber 開始行番号
-     * @param id テンプレートではcontainerid
-     * @param classname テンプレートではcontainerclassname
-     * @param langageName 言語名
-     * @param evenlinename 偶数行のクラス名
-     * @param oddlinename 奇数行のクラス名
-     * @return 変換結果
-     * @throws IllegalArgumentException linecontents,linenames,subclassnameの配列長が一致していない
-     * @throws ScriptException JavaScriptを実行中に何らかの例外が起こった
-     * @throws NullPointerException linecontents,linenames,subclassnameがnull
-     */
-    public String run(String[] linecontents,String[] linenames,String[] subclassname,
-            int startnumber,String id,String classname,String langageName,
-            String evenlinename,String oddlinename)
-            throws IllegalArgumentException, ScriptException,NullPointerException{
-        int length = linecontents.length;
-        if(length!=linenames.length||length!=subclassname.length)throw new IllegalArgumentException("linecontents,linenames,subclassnameの配列長が一致していない");
-        PrintBuffer pb = new PrintBuffer();
+    public Element run(int startNumber,String oddLineName,String evenLineName,Element[] lines,
+            String containerid,String containerclassname,String language) throws ScriptException{
+        if(lines==null)lines = new Element[0];
         Bindings bind = jsengine.getBindings(ScriptContext.ENGINE_SCOPE);
         bind.putAll(original);
         
         
-        bind.put("__contents",linecontents);
-        bind.put("__names",linenames);
-        bind.put("__subnames",subclassname);
-        bind.put("startnumber",startnumber);
-        bind.put("containerid",id==null?"":id);
-        bind.put("containerclassname",classname==null?"":classname);
-        bind.put("langage",isempty(langageName)?"text":langageName);
-        bind.put("linecounts",length);
-        bind.put("evenlinename",isempty(evenlinename)?"evenline":evenlinename);
-        bind.put("oddlinename",isempty(oddlinename)?"oddline":oddlinename);
-        bind.put("__stringbuffer", pb);
+        bind.put("startNumber", startNumber);
+        bind.put("evenLineName",isempty(evenLineName)?"evenline":evenLineName);
+        bind.put("oddLineName",isempty(oddLineName)?"oddline":oddLineName);
+        bind.put("lines",lines);
+        bind.put("id",containerid);
+        bind.put("classname",containerclassname);
+        bind.put("language",isempty(language)?"text":language);
         
+        Object o;
         
-        for(A a:alist){
-            if(a.isScript){
-                try{
-                    jsengine.eval(a.string);
-                }catch(ScriptException e){
-                    throw new ScriptException("error message:"+e.getMessage()+".\nエラーは \n"+a.code+"\nの実行で起こりました。");
-                }
-            }else{
-                pb.print(a.string);
-            }
-        }
+        if(containerid!=null)o= compiled.eval(bind);
+        else o=jsengine.eval(RUNCODE);
+        
         bind.clear();
         
-        return pb.sb.toString();
+        if(o ==null || !(o instanceof Element)){
+            throw new ScriptException("テンプレートの結果がnodamushi.hl.Elementではありません。　result:"+o);
+        }
+        
+        return (Element)o;
     }
     
     
- 
     
     
-    
-    
-    
-    //ファクトリメソッド
+//ファクトリメソッド
     
     /**
-     * ファイルを読み込んでHTMLTemplateEngineを生成します
+     * ファイルを読み込んでTemplateEngine2を生成します
      * @param filepath ファイルパス
      * @param charset 文字コード（nullの場合は自動判別します。確実ではありません）
      * @return ファイル読み込みに失敗したり、スクリプトエラーが起こった場合はnull
@@ -219,7 +121,7 @@ public class HTMLTemplateEngine{
     }
 
     /**
-     * ファイルを読み込んでHTMLTemplateEngineを生成します
+     * ファイルを読み込んでTemplateEngine2を生成します
      * @param filepath ファイルパス
      * @param charset 文字コード（nullの場合は自動判別します。確実ではありません）
      * @return ファイル読み込みに失敗したり、スクリプトエラーが起こった場合はnull
@@ -237,7 +139,7 @@ public class HTMLTemplateEngine{
     }
 
     /**
-     * ファイルを読み込んでHTMLTemplateEngineを生成します
+     * ファイルを読み込んでTemplateEngine2を生成します
      * @param filepath ファイルパス
      * @param charset 文字コード（nullの場合は自動判別します。確実ではありません）
      * @return ファイル読み込みに失敗したり、スクリプトエラーが起こった場合はnull
@@ -255,7 +157,7 @@ public class HTMLTemplateEngine{
     }
 
     /**
-     * InputStreamを読み込んでHTMLTemplateEngineを生成します
+     * InputStreamを読み込んでTemplateEngine2を生成します
      * @param in テンプレートの内容のInputStream
      * @param charset 文字コード（nullの場合は自動判別します。確実ではありません）
      * @return 読み込みに失敗したり、スクリプトエラーが起こった場合はnull
@@ -271,4 +173,5 @@ public class HTMLTemplateEngine{
         }else System.err.println(in+"を読み込むことが出来ませんでした。");
         return null;
     }
+    
 }

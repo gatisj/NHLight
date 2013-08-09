@@ -11,9 +11,11 @@ import java.util.Map;
  *
  */
 public class Node{
-
+    
+    public static final String DocumentFragmentName="document-fragment";
+    public static final String TextNodeName = "textnode";
     public static Node createTextNode(String text){
-        Node n = new Node("textnode",TEXT_NODE);
+        Node n = new Node(TextNodeName,TEXT_NODE);
         n.setNodeValue(text);
         return n;
     }
@@ -64,7 +66,9 @@ public class Node{
     public boolean hasChildNodes(){
         return !children.isEmpty();
     }
-    
+    public short getNodeType(){
+        return nodetype;
+    }
     
     
     public Map<String,Attr> getAttributes(){
@@ -97,6 +101,14 @@ public class Node{
     
     public Node appendChild(Node newChild) throws NullPointerException{
         if(children.contains(newChild))children.remove(newChild);
+        String name = newChild.name;
+        if(DocumentFragmentName.equals(name)){
+            for(Node n:newChild.children){
+                appendChild(n);
+            }
+            return newChild;
+        }
+        
         children.add(newChild);
         add_postprocess(newChild);
         return newChild;

@@ -10,9 +10,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import javax.script.ScriptException;
 
@@ -59,25 +57,25 @@ java -cp juniversalchardet.jar:nhlight.jar nodamushi.hl.NHLight -l java -t templ
  */
 public class NHLight{
 
-    private static HTMLTemplateEngine defaultEngine;
     
-    /**
-     * nodamushi.hlパッケージにあるdefault.htmlテンプレートを返します。
-     * @return
-     */
-    public static HTMLTemplateEngine getDefaultTemplate(){
-        synchronized (NHLight.class) {
-            if(defaultEngine==null){
-                InputStream in = NHLight.class.getResourceAsStream("default.html");
-                if(in==null){
-                    throw new RuntimeException("デフォルトのテンプレートがnodamushi.hiに保存されていません");
-                }
-                defaultEngine = HTMLTemplateEngine.createEngine(in, null);
+    private static class A{
+        private static final HTMLTemplateEngine defaultEngine;
+        static{
+            InputStream in = NHLight.class.getResourceAsStream("default.js");
+            if(in==null){
+                throw new RuntimeException("デフォルトのテンプレートがnodamushi.hiに保存されていません");
             }
+            defaultEngine = HTMLTemplateEngine.createEngine(in, null);
         }
-        return defaultEngine;
     }
     
+    /**
+     * nodamushi.hlパッケージにあるdefault.jsテンプレートを返します。
+     * @return
+     */
+    public static HTMLTemplateEngine getDefaultTemplate2(){
+        return A.defaultEngine;
+    }
     
     /**
      * shell等からの起動用のメソッド
@@ -195,7 +193,7 @@ public class NHLight{
         nhlight.parse();
         
         if(templatefile==null){
-            template=getDefaultTemplate();
+            template=getDefaultTemplate2();
         }else{
             template=HTMLTemplateEngine.createEngine(templatefile, templateencoding);
             if(template==null){
@@ -226,9 +224,8 @@ public class NHLight{
             }
         }
         
-        Result r = nhlight.convertToHTML(template, tokenTypeClassNameDefine, escape, 
+        String html = nhlight.convertToHTML(template, tokenTypeClassNameDefine, escape, 
                 id, classname, evenlinename, oddlinename);
-        String html = r.html;
         boolean print=outputfile==null&&!toClipBoard;
         if(print){
             System.out.println(html);
@@ -317,9 +314,9 @@ public class NHLight{
      */
     public static final class Result{
         /**
-         * 生成されたHTML文字列です
+         * 生成されたHTML DOM（らしきもの）です
          */
-        public String html;
+        public Element element;
         /**
          * Lamuriyan連携用の変数名と行番号の組み合わせです。
          */
@@ -488,12 +485,11 @@ public class NHLight{
      * 他はデフォルトの値を用いてHTMLに変換します。
      * @see NHLight#convertToHTML(HTMLTemplateEngine, String, EscapeMap, String, String, String, String)
      * @param template HTMLのひな形。nullの場合NullPointerExceptionが発生します
-     * @return HTMLの結果と、Lamuriyan連携用の行番号と変数名のペアのコレクションを入れたResultオブジェクト。
-     * ただし、コンストラクタでソースコードが読み込めなかった時はnullが返ります。
+     * @return HTMLの結果。コンストラクタでソースコードが読み込めなかった時はnullが返ります。
      * @throws NullPointerException templateがnullの場合
      * @throws ScriptException JavaScript実行時に例外が発生した場合
      */
-    public Result convertToHTML(HTMLTemplateEngine template) throws NullPointerException, ScriptException{
+    public String convertToHTML(HTMLTemplateEngine template) throws NullPointerException, ScriptException{
         return convertToHTML(template, null, null, null, null, null, null);
     }
     
@@ -512,43 +508,102 @@ public class NHLight{
      * テンプレート側ではcontainerclassnameとして利用されます。<br><br>
      * @param evenlinename 偶数行に指定するクラス名です。nullの場合はevenlineと扱われます。
      * @param oddlinename 奇数行に指定するクラス名です。nullの場合はoddlineと扱われます。
-     * @return HTMLの結果と、Lamuriyan連携用に行番号と変数名のペアのコレクションを入れたResultオブジェクト。
-     * ただし、コンストラクタでソースコードが読み込めなかった時はnullが返ります。
+     * @return HTMLの結果。コンストラクタでソースコードが読み込めなかった時はnullが返ります。
      * @throws NullPointerException templateがnullの場合
      * @throws ScriptException JavaScript実行時に例外が発生した場合
      */
-    public Result convertToHTML(HTMLTemplateEngine template,String tokenTypeClassNameDefine,EscapeMap escape,
+    public String convertToHTML(HTMLTemplateEngine template,String tokenTypeClassNameDefine,EscapeMap escape,
             String id,String classname,String evenlinename,String oddlinename) throws NullPointerException,ScriptException{
-        if(analyser==null)return null;
-        if(template==null)throw new NullPointerException("engine is null.");
-        List<Element> elements = analyser.convertToElements(tokenTypeClassNameDefine, escape);
+        Result r = converToElement(template, tokenTypeClassNameDefine, escape, id, classname, evenlinename, oddlinename);
+        if(r==null)return null;
         
-        int startlinenumber = analyser.getStartLineNumber();
-        String language=analyser.getLanguageName();
-        String[] contents = new String[elements.size()],
-                clname=new String[elements.size()],subname=new String[elements.size()];
+        return toHTML(r.element);
+    }
+    
+    public Result converToElement(HTMLTemplateEngine template,String tokenTypeClassNameDefine,EscapeMap escape,
+            String id,String classname,String evenlinename,String oddlinename)
+        throws NullPointerException,ScriptException{
+            if(analyser==null)return null;
+            if(template==null)throw new NullPointerException("engine is null.");
+            List<Element> elements = analyser.convertToElements(tokenTypeClassNameDefine, escape);
+            
+            int startlinenumber = analyser.getStartLineNumber();
+            String language=analyser.getLanguageName();
+            Element[] lines = new Element[elements.size()];
+            int i=0;
+            Result r =new Result();
+            for(Element el:elements){
+                el.setNodeName(Node.DocumentFragmentName);
+                lines[i]=el;
+                String s = el.getAttribute("linenumberflag");
+                if(!s.isEmpty()){
+                   r.linenumbers.add(new Pair<String, Integer>(s, startlinenumber+i));
+                }
+                i++;
+            }
+            
+            Element e= template.run(startlinenumber, oddlinename, evenlinename, lines, id, classname, language);
+            r.element=e;
+            return r;
+    }
+    
+    
+    private static void _toHTML(Node n,StringBuilder sb){
+        if(!(n instanceof Element))return;
+        Element e = (Element)n;
+        String name = e.getNodeName().toLowerCase();
+        boolean isSingle= 
+        "img".equals(name)||
+        "br".equals(name)||
+        "input".equals(name)||
+        "hr".equals(name)||
+        "meta".equals(name)||
+        "embed".equals(name)||
+        "area".equals(name)||
+        "base".equals(name)||
+        "col".equals(name)||
+        "keygen".equals(name)||
+        "link".equals(name)||
+        "param".equals(name)||
+        "source".equals(name);
         
-        Result r=new Result();
-        int i=0;
-        for(Element el:elements){
-           contents[i]=el.innerHTML();
-           String s =  el.getAttribute("class");
-           clname[i] =s==null?"":s;
-           s=el.getAttribute("sub-class");
-           subname[i] = s==null?"":s;
-           
-           String n = el.getAttribute("linenumberflag");
-           if(!n.isEmpty()){
-               r.linenumbers.add(new Pair<String, Integer>(n, startlinenumber+i));
-           }
-           i++;
+        sb.append("<").append(name);
+        
+        Map<String,Attr> attrs = e.getAttributes();
+        for(String key:attrs.keySet()){
+            if(HTMLTemplateEngine.LabelAttrName.equals(key)){
+                continue;//無視
+            }
+            
+            sb.append(" ").append(key).append("=\"")
+            .append(attrs.get(key).value).append("\"");
         }
         
-        r.html=template.run(contents, clname, subname, startlinenumber, id, classname,language, evenlinename, oddlinename);
-        
-        
-        return r;
+        sb.append(">");
+        if(!isSingle){
+            
+            if(e.hasChildNodes()){
+                List<Node> ns=e.getChildNodes();
+                for(Node nn:ns){
+                    if(nn.getNodeType()==Node.TEXT_NODE){
+                        sb.append(nn.getNodeValue());
+                    }else
+                        _toHTML(nn, sb);
+                }
+            }
+            
+            sb.append("</").append(name).append(">");
+            
+        }
     }
+    
+    //かなり簡易的なHTMLへの変換
+    private static String toHTML(Element el){
+        StringBuilder sb=new StringBuilder();
+        _toHTML(el, sb);
+        return sb.toString();
+    }
+    
     
     
 }
