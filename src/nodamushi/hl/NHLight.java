@@ -53,6 +53,7 @@ java -cp juniversalchardet.jar:nhlight.jar nodamushi.hl.NHLight -l java -t templ
 なお、実行にはjuniversalchardet(http://code.google.com/p/juniversalchardet/)が必要です。
 
 @author nodamushi
+@version 0.2.01
 
  */
 public class NHLight{
@@ -73,7 +74,7 @@ public class NHLight{
      * nodamushi.hlパッケージにあるdefault.jsテンプレートを返します。
      * @return
      */
-    public static HTMLTemplateEngine getDefaultTemplate2(){
+    public static HTMLTemplateEngine getDefaultTemplate(){
         return A.defaultEngine;
     }
     
@@ -193,7 +194,7 @@ public class NHLight{
         nhlight.parse();
         
         if(templatefile==null){
-            template=getDefaultTemplate2();
+            template=getDefaultTemplate();
         }else{
             template=HTMLTemplateEngine.createEngine(templatefile, templateencoding);
             if(template==null){

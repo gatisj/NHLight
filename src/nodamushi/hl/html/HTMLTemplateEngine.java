@@ -102,7 +102,7 @@ public class HTMLTemplateEngine{
 //ファクトリメソッド
     
     /**
-     * ファイルを読み込んでTemplateEngine2を生成します
+     * ファイルを読み込んでHTMLTemplateEngineを生成します
      * @param filepath ファイルパス
      * @param charset 文字コード（nullの場合は自動判別します。確実ではありません）
      * @return ファイル読み込みに失敗したり、スクリプトエラーが起こった場合はnull
@@ -121,7 +121,7 @@ public class HTMLTemplateEngine{
     }
 
     /**
-     * ファイルを読み込んでTemplateEngine2を生成します
+     * ファイルを読み込んでHTMLTemplateEngineを生成します
      * @param filepath ファイルパス
      * @param charset 文字コード（nullの場合は自動判別します。確実ではありません）
      * @return ファイル読み込みに失敗したり、スクリプトエラーが起こった場合はnull
@@ -139,7 +139,7 @@ public class HTMLTemplateEngine{
     }
 
     /**
-     * ファイルを読み込んでTemplateEngine2を生成します
+     * ファイルを読み込んでHTMLTemplateEngineを生成します
      * @param filepath ファイルパス
      * @param charset 文字コード（nullの場合は自動判別します。確実ではありません）
      * @return ファイル読み込みに失敗したり、スクリプトエラーが起こった場合はnull
@@ -157,7 +157,7 @@ public class HTMLTemplateEngine{
     }
 
     /**
-     * InputStreamを読み込んでTemplateEngine2を生成します
+     * InputStreamを読み込んでHTMLTemplateEngineを生成します
      * @param in テンプレートの内容のInputStream
      * @param charset 文字コード（nullの場合は自動判別します。確実ではありません）
      * @return 読み込みに失敗したり、スクリプトエラーが起こった場合はnull
