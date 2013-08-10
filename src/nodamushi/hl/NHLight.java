@@ -515,13 +515,13 @@ public class NHLight{
      */
     public String convertToHTML(HTMLTemplateEngine template,String tokenTypeClassNameDefine,EscapeMap escape,
             String id,String classname,String evenlinename,String oddlinename) throws NullPointerException,ScriptException{
-        Result r = converToElement(template, tokenTypeClassNameDefine, escape, id, classname, evenlinename, oddlinename);
+        Result r = convertToElement(template, tokenTypeClassNameDefine, escape, id, classname, evenlinename, oddlinename);
         if(r==null)return null;
         
         return toHTML(r.element);
     }
     
-    public Result converToElement(HTMLTemplateEngine template,String tokenTypeClassNameDefine,EscapeMap escape,
+    public Result convertToElement(HTMLTemplateEngine template,String tokenTypeClassNameDefine,EscapeMap escape,
             String id,String classname,String evenlinename,String oddlinename)
         throws NullPointerException,ScriptException{
             if(analyser==null)return null;
