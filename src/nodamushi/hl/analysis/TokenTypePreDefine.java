@@ -35,7 +35,10 @@ public interface TokenTypePreDefine{
             "20:declaration-token;" +
             "21:tag-token;" +
             "22:tagname-token;" +
-            "23:attribute-token;";
+            "23:attribute-token;"+
+            "24:command-token;"
+            ;
+    
     
     
     /**改行トークンを表す番号。使用禁止*/
@@ -103,4 +106,9 @@ public interface TokenTypePreDefine{
     public static final int MARKUP_TAG_NAME_TOKEN=22;
     /**マークアップ言語における属性名*/
     public static final int MARKUP_TAG_ATTRIBUTE_TOKEN=23;
+    /**
+     * マークアップ言語におけるコマンドを表すトークン。<br>
+     * 主にTeXの\command が対象
+     */
+    public static final int MARKUP_COMMAND_TOKEN=24;
 }

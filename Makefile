@@ -7,6 +7,8 @@ JUNIVERSALCHARDET:=C:\javaclasspath\juniversalchardet-1.0.3.jar
 #VPATHの区切り文字はWindowsでは;だけど、UNIX系では:だとからしい
 DSEP:=;
 
+#runでテストするファイル名
+TESTFILE:=test.tex
 
 ALLPACKAGES:=\
 nodamushi/hl \
@@ -78,5 +80,8 @@ zip:jar javadoc
 	cp -fr css/* nhlight
 	zip -r nhlight.zip nhlight
 	rm -rf nhlight
+
+run:FORCE
+	java -cp "$(JUNIVERSALCHARDET)$(DSEP)$(BIN)" nodamushi.hl.NHLight -copy "testcode/$(TESTFILE)"
 
 FORCE:

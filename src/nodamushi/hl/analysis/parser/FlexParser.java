@@ -27,6 +27,12 @@ public abstract class FlexParser implements TokenTypePreDefine,Parser{
     private boolean ignoreNewLine_LastAddToken=true;
     protected boolean ignore_newline=false;
     
+    /**Identifierトークンが変更されるデフォルトのトークン番号を定義します。<br>
+     * 初期値はPLAIN_TOKENに設定されています。<br>
+     * IdentifierがPLAIN_TOKEN以外の値にデフォルトで設定したい場合はこの値を変更することで可能になります。
+     * */
+    protected int defaultIdentifierTokenType=TokenTypePreDefine.PLAIN_TOKEN;
+    
     protected FlexParser(){
         defineIdentifierTokenPattern(defaultKeywordDefine());
     }
@@ -102,7 +108,7 @@ public abstract class FlexParser implements TokenTypePreDefine,Parser{
                 return p.getB();
             }
         }
-        return 0;
+        return defaultIdentifierTokenType;
     }
     
     /**

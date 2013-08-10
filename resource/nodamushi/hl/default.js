@@ -2,7 +2,7 @@
   Template Type OL
   このテンプレートは
 
-  <code class="nhlight"><pre>
+  <code class="nhlight nhlight-言語名"><pre>
   <ol>
   <li>ソースコード</li>………
   </ol>
@@ -15,7 +15,7 @@
 
 */
 
-var clname = "nhlight";
+var clname = "nhlight nhlight-"+language;
 if(classname){
     clname+=" "+classname;
 }
@@ -26,7 +26,9 @@ if(id){
 }
 var pre = createElement("pre");
 code.appendChild(pre);
-
+var ol = createElement("ol");
+ol.setAttribute("start",startNumber);
+pre.appendChild(ol);
 foreach(function(i,linenumber,DOM,lineclassname,subclassname,label){
     var li = createElement("li");
     var sp = createElement("span");
@@ -47,7 +49,7 @@ foreach(function(i,linenumber,DOM,lineclassname,subclassname,label){
     }
     sp.appendChild(DOM);
     li.appendChild(sp);
-    pre.appendChild(li);
+    ol.appendChild(li);
 });
 
 

@@ -1,0 +1,27 @@
+\documentclass[4a]{jsarticle}
+\author{@nodamushi}
+\title{テストだー}
+
+
+\begin{document}
+\maketitle
+
+\section{マクロの定義}
+\verb+\def+で定義できるよね。
+%↑\verbの中身はただのテキストにしたいけど、
+%静的解析のNHLightじゃちょっちきつい
+
+\def\macro{\iftrue TRUE! \else FALSE! \fi}
+
+\subsection{数式}
+数式モードも何か処理させようかと思ったけど、現段階じゃ何もしてません。
+$x = yt$
+
+\[
+y = \int_0^1 x dx
+\]
+
+\subsubsection{その他}
+\%とか\$とか\{とか\\とかとか( ﾟдﾟ)
+
+\end{document}

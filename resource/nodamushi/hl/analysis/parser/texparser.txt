@@ -1,0 +1,4 @@
+# 後半のパターン部分は正規表現として扱われるので、
+# \は二回重ねてエスケープすること
+
+10=\\(begin|end|makeatletter|makeatother|\\|documentclass|author|title|date|maketitle|item|section|subsection|subsubsection|verb|hspace\*?|,|vspace\*?|bf|rm|it|sc|tt|sf|sl|em|textbf|textrm|textit|textsc|texttt|textsf|textsl|mathrm|mathit|mathcal|mathfrak|mathbb|frak|cal|tiny|scriptsize|footnotesize|small|normalsize|large|LARGE|huge|Huge|ref|label|bibitem|bibliography|usepackage|cite|hline|vline)
